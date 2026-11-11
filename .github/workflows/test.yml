@@ -1,0 +1,10 @@
+name: Windows offline tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Offline regression tests
+        shell: pwsh
+        run: ./tests/Run.ps1

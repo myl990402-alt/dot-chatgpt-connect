@@ -1,39 +1,39 @@
 # dot ChatGPT Connect
 
-Windows �ϵ� ChatGPT��Codex��Dot ����������������ߡ������Ų� Codex ����ʱ����������Dot ��ʾ�������ߵ���������û����Ӧ����ݷ�ʽ�����û�з�Ӧ�����⡣
+Windows 上的 ChatGPT／Codex／Dot 代理诊断与启动工具。用于排查 Codex 启动时反复重连、Dot 显示电脑在线但桌面请求没有响应、快捷方式点击后没有反应等问题。
 
-���Ƕ����������������ߣ��� OpenAI ��������ϵ����ǰΪ **0.1.0 ʵ��汾**����Ͽ�����֤ TLS��HTTP �ɴDot ��¼�Ự��WebSocket �����Ӻ�ʵ���ļ���ȡ����������ա�
+这是独立的社区辅助工具，与 OpenAI 无隶属关系。当前为 **0.1.0 实验版本**。诊断可以验证 TLS／HTTP 可达；Dot 登录会话、WebSocket 长连接和实际文件读取仍需独立验收。
 
-## ����ʹ��
+## 快速使用
 
-��Ҫ Windows 10/11��PowerShell **7.4+**��Windows �Դ��� `curl.exe`���Լ��Ѱ�װ����¼�� ChatGPT ����Ӧ�á�ʹ������Ȩʹ�õ������������
+需要 Windows 10/11、PowerShell **7.4+**、Windows 自带的 `curl.exe`，以及已安装并登录的 ChatGPT 桌面应用。使用你有权使用的网络与代理。
 
-1. ��װ PowerShell 7��`winget install --id Microsoft.PowerShell --exact`��Ȼ����µ� PowerShell �նˡ�
-2. ������Ŀ��ѹ���̶�Ŀ¼�������Լ��Ĵ���������
-3. ����ĿĿ¼���� `pwsh -NoProfile -File .\Connect.ps1 -Action Diagnose`��
-4. ��ԡ��״������������������ `pwsh -NoProfile -File .\Connect.ps1 -Action EnableCodexProxy`��
-5. ��ȫ�˳� ChatGPT����˫�� `start.cmd`�����н��̲���̳�������������
-6. �� [���ղ���](docs/VERIFICATION.md) ���� Dot��
+1. 安装 PowerShell 7：`winget install --id Microsoft.PowerShell --exact`，然后打开新的 PowerShell 终端。
+2. 将本项目解压到固定目录，启动自己的代理软件。
+3. 在项目目录运行 `pwsh -NoProfile -File .\Connect.ps1 -Action Diagnose`。
+4. 针对“首次五次重连”现象，运行 `pwsh -NoProfile -File .\Connect.ps1 -Action EnableCodexProxy`。
+5. 完全退出 ChatGPT，再双击 `start.cmd`。已有进程不会继承新启动参数。
+6. 按 [验收步骤](docs/VERIFICATION.md) 测试 Dot。
 
-��������ͼ�꣺`pwsh -NoProfile -File .\Connect.ps1 -Action InstallShortcut`��ͼ����Ϊ **dot ChatGPT**���ƶ���ĿĿ¼��ж�ظ� PowerShell ����Ҫ���´�����ݷ�ʽ��
+创建桌面图标：`pwsh -NoProfile -File .\Connect.ps1 -Action InstallShortcut`。图标名为 **dot ChatGPT**。移动项目目录或卸载该 PowerShell 后，需要重新创建快捷方式。
 
-��Ҫʹ�� Windows PowerShell 5.1 �� `powershell.exe` ���� `pwsh.exe`�����߲������ִ�в��ԣ�������֯�������ƣ��밴����Ա�����ķ�ʽ���У���Ҫ�رղ��ԡ������ļ������Ϊ���Ի�����ʱ���������Դ��Դ�룬�������Լ���ִ�в��Դ����ļ���ֹ״̬��
+不要使用 Windows PowerShell 5.1 的 `powershell.exe` 代替 `pwsh.exe`。工具不会更改执行策略；如有组织策略限制，请按管理员允许的方式运行，不要关闭策略。下载文件被标记为来自互联网时，先审查来源和源码，再依照自己的执行策略处理文件阻止状态。
 
-## �����޸��ֱ���ʲô
+## 两项修复分别做什么
 
-| ֢״ | ��Ӧ���� | ��֤��Χ |
+| 症状 | 对应处理 | 验证范围 |
 | --- | --- | --- |
-| Codex �������״η���������ͨ����ʾ���� 5 �� | ������ `config.toml` �� `[features]` ������ `respect_system_proxy = true` | ��ԭ�� Codex ����ʱ����ʹ��ϵͳ������������ʵ�� |
-| Dot ���ߣ������ش�������ȡ����ʧ�� | ���������ط��񣬲��Խ��̼� HTTP��HTTPS �� Node ������������Ӧ�� | ������������������֤�˻�����Ȩ��WebSocket ������ӿ��Ѿ��ָ� |
-| ��ݷ�ʽ�޷�Ӧ | ʹ�� PowerShell 7����ʾ���󡢶�̬���Ұ�װλ�á�����Ӧ�������� | ����ʹ�����صĳ�ʱ���˳��ȴ� |
+| Codex 重启后首次反复重连，通常显示到第 5 次 | 在现有 `config.toml` 的 `[features]` 中设置 `respect_system_proxy = true` | 让原生 Codex 运行时尝试使用系统代理；需重启实测 |
+| Dot 在线，但本地创建／读取请求失败 | 诊断三个相关服务，并以进程级 HTTP／HTTPS 与 Node 代理环境启动应用 | 启动环境调整；不保证账户、授权、WebSocket 或桌面接口已经恢复 |
+| 快捷方式无反应 | 使用 PowerShell 7、显示错误、动态查找安装位置、已有应用立即打开 | 不再使用隐藏的长时间退出等待 |
 
-**����������޸������ǽ����Դ����ĳ���Ρ�** ԭ�����ĸĶ�ֻ�� `respect_system_proxy`�������߲���ı�ͻ����ڲ��������ޣ������Զ��ظ������Ի���Ҳ����ѭ������Ӧ�á�
+**“五次重连修复”不是将重试次数改成五次。** 原方案的改动只有 `respect_system_proxy`。本工具不会改变客户端内部重试上限，不会自动重复创建对话，也不会循环重启应用。
 
-## �����Լ��Ĵ���
+## 适配自己的代理
 
-Ĭ�� `auto` ����ʶ�� Windows �ֶ�ϵͳ������Ȼ���� `HTTPS_PROXY`��`HTTP_PROXY`������ʹ��ֱ����ϵͳ VPN ·�ɡ��������˿�һ���� 7897��
+默认 `auto` 优先识别 Windows 手动系统代理，然后检查 `HTTPS_PROXY`／`HTTP_PROXY`，否则使用直连／系统 VPN 路由。不会假设端口一定是 7897。
 
-���� `config.example.json` Ϊ `config.local.json`������ʹ���Լ��� HTTP �����˿ڣ�
+复制 `config.example.json` 为 `config.local.json`。例如使用自己的 HTTP 代理端口：
 
 ```json
 {
@@ -45,23 +45,22 @@ Windows �ϵ� ChatGPT��Codex��Dot ������������
 }
 ```
 
-TUN��ȫ���� VPN �û���ѡ�� `"proxyMode": "direct"`������ϵͳ·�ɣ��ⲻ��ر� VPN��PAC �Զ�������Ҫ�Լ�������ʵ�ʴ�����ַ����ʹ�� explicit����ǰ��֧�� SOCKS-only �ʹ��˺�����Ĵ��� URL��
+TUN／全隧道 VPN 用户可选择 `"proxyMode": "direct"`，测试系统路由；这不会关闭 VPN。PAC 自动配置需要自己解析出实际代理地址，再使用 explicit。当前不支持 SOCKS-only 和带账号密码的代理 URL。
 
-���߲���ȡ Clash ���ġ��ڵ�ƾ�ݡ�ChatGPT ��¼���ƻ������¼������ֻ��¼����������״̬�롢��ʱ��curl �����롣�ɷ���������Ӧ�����м�顣
+工具不读取 Clash 订阅、节点凭据、ChatGPT 登录令牌或聊天记录。报告只记录服务域名、状态码、耗时、curl 错误码。可分享报告仍应先自行检查。
 
-## ����������
+## 回退与限制
 
-`EnableCodexProxy` ֻ�༭ָ�����ԣ��޸�ǰ����ԭ�ļ����������Ѿ�Ϊ true���������Ķ������� `RestoreCodexProxy` �ɻ��˱����ߵ����һ���޸ģ����֮���ֱ༭�����ã���ܾ����ǡ�
+`EnableCodexProxy` 只编辑指定特性，修改前保存原文件。若配置已经为 true，不产生改动。运行 `RestoreCodexProxy` 可回退本工具的最后一次修改；如果之后又编辑了配置，会拒绝覆盖。
 
-���̼�����ֻӰ�챾��������Ӧ�ü����ӽ��̡���ȫ�˳�����ԭ����Ӧ�����������������ʹ�ñ����ߴ���Ĳ��������߲���Ķ�ϵͳ������VPN��TUN��֤�顢����ǽ���˻�Ȩ�ޡ�
+进程级代理只影响本次启动的应用及其子进程。完全退出后用原来的应用入口启动，即不再使用本工具传入的参数。工具不会改动系统代理、VPN、TUN、证书、防火墙和账户权限。
 
-��ǰ��������̨�ػ����˻���¼���Զ����� Dot Ȩ�޻�ʱ���ȶ��Ա�֤���ٷ��ڲ������ַ���ܱ仯���ɰ��°汾����Դ���е���ϵ�ַ������ƽ̨��δ֧�֡�
+当前不包含后台守护、账户登录、自动授予 Dot 权限或长时间稳定性保证。官方内部服务地址可能变化，可按新版本调整源码中的诊断地址。其他平台尚未支持。
 
-## �����뷢��
+## 开发与发布
 
-���߲��ԣ�`pwsh -NoProfile -File .\tests\Run.ps1`������ֻ����ʱĿ¼����������ʵ���á�
+离线测试：`pwsh -NoProfile -File .\tests\Run.ps1`。测试只改临时目录，不触碰真实配置。
 
-����ʱֻ�ύԴ�롢�ĵ���ʾ�����ú�ͼ�ꡣ`config.local.json`��`data/`��ԭʼ��־����ݷ�ʽ����Ӧ�ύ��`data/` ������ñ��ݿ��ܺ�ԭ�����е�������Ϣ����Ҫ������ Codex ����Ŀ¼�򱾻���ʷ��¼�ϴ� GitHub��
+发布时只提交源码、文档、示例配置和图标。`config.local.json`、`data/`、原始日志、快捷方式均不应提交；`data/` 里的配置备份可能含原配置中的敏感信息。不要把整个 Codex 配置目录或本机历史记录上传 GitHub。
 
-��� [����˵��](docs/CONFIGURATION.md)��[�����Ų�](docs/NETWORK.md)��[���ղ���](docs/VERIFICATION.md) �� [�����嵥](docs/RELEASE.md)��Դ�뼰ԭ��ͼ����� MIT ����֤��
-
+详见 [配置说明](docs/CONFIGURATION.md)、[网络排查](docs/NETWORK.md)、[验收步骤](docs/VERIFICATION.md) 和 [发布清单](docs/RELEASE.md)。源码及原创图标采用 MIT 许可证。

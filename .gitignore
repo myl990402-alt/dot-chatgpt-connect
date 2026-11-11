@@ -1,0 +1,7 @@
+config.local.json
+data/
+*.lnk
+*.log
+*.bak
+.env*
+!.env.example
